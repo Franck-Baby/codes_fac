@@ -1,7 +1,7 @@
 
 
 
-#Définition de notre fonction principale
+#Définition de notre fonction principale 'Balayage'
 def Balayage():
 
     
@@ -176,3 +176,4 @@ def Secante():
         
 if __name__ == "__main__" :
     print(Secante())
+
