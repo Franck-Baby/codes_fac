@@ -337,3 +337,147 @@ def pivot_de_gauss():
 
 if __name__=="main" :
     pivot_de_gauss()
+
+
+
+
+
+
+
+
+
+
+
+
+
+import sympy as sp
+import numpy as np
+
+
+""" La fonction parse_vector_input permet de """
+def parse_vector_input(s, n):
+    s = s.strip()
+    # remove surrounding parentheses if present
+    if s.startswith('(') and s.endswith(')'):
+        s = s[1:-1].strip()
+
+    # Le choix du séparateur ou du splitter: virgule, ou l'espace
+    if ',' in s:
+        parts = [p.strip() for p in s.split(',') if p.strip() != '']
+    else:
+        parts = [p.strip() for p in s.split() if p.strip() != '']
+
+    if len(parts) != n:
+        raise ValueError(f"Attendu {n} composantes mais trouvé {len(parts)}.")
+
+    vals = []
+    for token in parts:
+        # utilisation de Sympi pour autoriser l'usage des fractions comme par exemple : "1/2"
+        try:
+            v_sym = sp.sympify(token)
+            v_float = float(v_sym.evalf())
+        except Exception as e:
+            raise ValueError(f"Impossible d'interpréter '{token}': {e}")
+        vals.append(v_float)
+    return vals
+
+
+
+""" Voici notre fonction mère qui vas effectuer la majeur partie des opérations, ainsi que celle de Newton cotes proprement dit """
+def newton_interactif():
+    print("=== MÉTHODE DE NEWTON POUR SYSTÈMES NON LINÉAIRES ===\n")
+
+    n_declared = int(input("Nombre d'inconnues du système (ex: 2) : "))
+
+    print("\nEntrez chaque équation f_i(...)=0 (ex: x+y, x-y) :")
+    exprs = []
+    for i in range(1, n_declared + 1):
+        s = input(f"f{i}(...) = ")
+        exprs.append(sp.sympify(s))
+
+    detected = sorted(list(set().union(*(e.free_symbols for e in exprs))), key=lambda sym: sym.name)
+
+    if len(detected) == 0:
+        print("Erreur !! Aucune variable détectée. Utilisez par exemple x et y.")
+        return
+
+    if len(detected) != n_declared: # Dans le cas où l'utilisateur a entré plusierus
+        print(f" Vous avez déclaré n = {n_declared} mais j'ai détecté {len(detected)} symboles : {detected}.")
+        print("On utilisera les symboles détectés.")
+        n = len(detected)
+    else:
+        n = n_declared
+
+    vars = tuple(detected)
+
+    F = sp.Matrix(exprs)
+    J = F.jacobian(vars)
+
+    print("\nLes Variables utilisées :", vars)
+    print("\nJacobienne calculée automatiquement :")
+    sp.pprint(J)
+
+    # Ici on fait la lecture de X0 
+    print("\nEntrez la valeur initiale X0.")
+    print(f"Entrez les {n} composantes sur une seule ligne séparées par des virgules .")
+    print("Exemples :")
+    print("  1/2, -1/4")
+    print("  0.5 -0.25")
+    s = input(f"X0 = ")
+
+    try:
+        X0_list = parse_vector_input(s, n)
+    except ValueError as ve:
+        print(f"Erreur de saisie : {ve}")
+        
+        # fallback: demander une saisie composante par composante dans le cas où l'utilisateur n'a pas saisie les composentes espacées avec des virgules
+        print("Veuillez donnez les composantes une par une.")
+        X0_list = []
+        for sym in vars:
+            while True:
+                tok = input(f"{sym} (valeur initiale) = ")
+                try:
+                    v = float(sp.sympify(tok).evalf())
+                    X0_list.append(v)
+                    break
+                except Exception as e:
+                    print("Entrée invalide, réessaie (ex: 1/2 ou 0.5).") # Ce message est afiché dans le cas où il y a eu une erreur de saisie
+
+    X = np.array(X0_list, dtype=float) # Ici on effectue la conversion des valeurs entrées sous forme de fractions en réels 
+
+    # Ici là on effectue la vérification du déterminant en X0
+    J_num = np.array(J.subs(list(zip(vars, X))).evalf(), dtype=float)
+    detJ = np.linalg.det(J_num)
+    if abs(detJ) < 1e-12:
+        print("\n ERREUR !! : Le déterminant de la Jacobienne s'annule (ou est trop petit) en X0.")
+        print("Choisissez un autre X0.")
+        return
+
+    eps = input("\nEntrez epsilon_0 (tolérance) : ")
+    eps = float(sp.sympify(eps).evalf())
+
+    # Méthode de Newton
+    max_iter = 50
+    for k in range(max_iter):
+        FX = np.array([fi.subs(list(zip(vars, X))).evalf() for fi in F], dtype=float)
+        JX = np.array(J.subs(list(zip(vars, X))).evalf(), dtype=float)
+
+        d = np.linalg.solve(JX, -FX)
+        X_new = X + d
+        print(f"Itération {k+1} : X = {X_new}")
+
+        if np.linalg.norm(d) < eps:
+            print("\n=== CONVERGENCE OBTENUE ===")
+            print("Solution approximative :", X_new)
+            return
+
+        X = X_new
+
+    print("\n La méthode n'a pas convergé après 50 itérations.")
+
+# Execution du programme
+if __name__ == "__main__":
+    newton_interactif()
+    
+
+
