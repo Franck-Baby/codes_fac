@@ -218,23 +218,6 @@ def Secante():
 
     print("Les valeurs initialles sont :  a = ", a ," ;  b = ", b , " ; e = ", e , " ; S = ", S )
     
-    while ( (f(a)*f(b) < 0 )  and (abs(b-a) >= e)  ) :
-        print("\nf(",a,") * f(",b,") = ", (f(a)*f(b)) ," et  |",a,"- ",b,"| = ", abs(b-a)) ;
-        
-        S = (a*f(b) - b*f(a))/(f(b) - f(a)) ;
-        
-        print("Donc le nouveau  S = ", S)
-        
-        if (f(S)*f(b)) < 0 :
-            a = S ;
-            print("Comme (f(S)*f(b)) = ",(f(S)*f(b)) ,"< 0  alors a = ", S)
-        else :
-            b = S ;
-            print("Comme (f(S)*f(b)) = ",(f(S)*f(b)) ," > 0  alors b = ", S)
-        
-    
-
-        
     return print("\nf(",a,") * f(",b,") = ", (f(a)*f(b)) ," et  |",a,"- ",b,"| = ", abs(b-a),"\n alors on a finalement :  a = ",a," ; b = ",b," et  S = ",S,"\n\nLa solution approchée de votre fonction à ",e," près est  : ", S)
         
 if __name__ == "__main__" :
@@ -384,7 +367,7 @@ def parse_vector_input(s, n):
 
 
 """ Voici notre fonction mère qui vas effectuer la majeur partie des opérations, ainsi que celle de Newton cotes proprement dit """
-def newton_interactif():
+def Newton_cotes():
     print("=== MÉTHODE DE NEWTON POUR SYSTÈMES NON LINÉAIRES ===\n")
 
     n_declared = int(input("Nombre d'inconnues du système (ex: 2) : "))
@@ -477,7 +460,8 @@ def newton_interactif():
 
 # Execution du programme
 if __name__ == "__main__":
-    newton_interactif()
+    Newton_cotes()
     
+
 
 
